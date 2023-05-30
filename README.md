@@ -80,6 +80,8 @@ The PoC is written in Node.js (`v12.22.12`+) and only works on HTTP(S) implants.
 3. Currently, only the Windows implants with the default config have been tested.  
 4. An implant with the version 1.5.x which implements the new ECDH key exchange scheme is required. This PoC does not work with the older 1.4.x protocol.  
 
+![Img. 1](./demo/img01.png)
+
 By default, the PoC server prints all the received data on the console screen. You should see your designated payload popping up on the implanted device instantly right after the beacon starts.  
 
 # Credits
