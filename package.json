@@ -1,0 +1,13 @@
+{
+  "name": "sliver-hijack-poc",
+  "author": "tangent65536",
+  "main": "src/server.js",
+  "version": "0.99.0",
+  "engines": {
+    "node": "^12.22.12"
+  },
+  "dependencies": {
+    "protobufjs": "^7.2.3",
+    "tweetnacl": "^1.0.3"
+  }
+}

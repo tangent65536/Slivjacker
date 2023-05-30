@@ -1,0 +1,14 @@
+{
+  "cert": "data/server/localhost.crt",
+  "key": "data/server/rsapriv.pem",
+
+  "port": 443,
+
+  "implantPriv": "base64+encoded+X25519+implant+private+key+here",
+  "serverPub": "base64+encoded+X25519+server+PUBLIC+key+here",
+
+  "payload": {
+    "Path": "C:\\Windows\\system32\\notepad.exe",
+    "Args": ["C:\\Windows\\system32\\drivers\\etc\\hosts"]
+  }
+}
