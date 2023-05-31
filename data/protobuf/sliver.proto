@@ -373,11 +373,11 @@ message TaskReq {
   uint32 Pid = 3;
   bytes Data = 4;
 
-  commonpb.Request Request = 9;
+  Request Request = 9;
 }
 
 message Task {
-  commonpb.Response Response = 9;
+  Response Response = 9;
 }
 
 message ExecuteAssemblyReq {
