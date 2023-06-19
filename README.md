@@ -76,7 +76,7 @@ Below is a brief list of instructions we have to perform:
 
 The PoC is written in Node.js (`v12.22.12`+) and only works on HTTP(S) implants. The following items/presets are required:  
 1. A copy of the implant executable file with its private key and the server's public key retrieved and added to `conf.json`. The corresponding server's private key is NOT needed!  
-2. A proxy/MitM server that can reroute HTTP(S) client traffic from the implanted device to the PoC server. (Or if all you want is just to see notepad.exe popping up on the implanted device, just edit the implant C2 to point to your PoC server address.)  
+2. Make sure your implant's C2 points to the PoC server's address to mimic a MitM.  
 3. Currently, only the Windows implants with the default config have been tested.  
 4. An implant with the version 1.5.x which implements the new ECDH key exchange scheme is required. This PoC does not work with the older 1.4.x protocol.  
 
