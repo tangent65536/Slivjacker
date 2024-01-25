@@ -1,5 +1,5 @@
 # Slivjacker
-### Hijack Sliver Implants Via MitM Attacks
+### Hijack Sliver Implants Via MitM Attacks (CVE-2023-34758)
 By Tangent65536 at CHT Security Co., Ltd.
 
 ---
