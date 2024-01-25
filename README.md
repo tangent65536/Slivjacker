@@ -4,15 +4,19 @@ By Tangent65536 at CHT Security Co., Ltd.
 
 ---
 
+### Special thanks to the [Sliver](https://github.com/BishopFox/sliver) devs for swift responses and update! It's a really powerful and awesome tool!  
+
+---
+
 # Intro
 According to the [Sliver documentation](https://github.com/BishopFox/sliver/wiki/Transport-Encryption#known-limitations), the framework is supposed to accomplish (partial) forward secrecy:  
 
 > Perfect Forward Secrecy: We do get some forward secrecy, since only the public key encrypted version of the session key is sent over the wire; therefore **recovery of the hard coded implant keys from the binary should not result in recovery of the session key. Only when the server's private key is compromised can the session key be recovered**, which we currently don't consider to be a problem.  
 
-Nevertheless, the current implementation of the Sliver ECDH key exchange scheme does not provide any extra level of security as a man in the middle with access to a Sliver implant binary listening to the implant's traffic can reliably recover the session key, resulting in full disclosure of all transmitted data. Furthermore, the MitM can fully compromise the connection to execute arbitrary commands supported by the corresponding implant on its installed devices.  
+Nevertheless, the vulnerable implementation of the Sliver ECDH key exchange scheme did not provide any extra level of security as a man in the middle with access to a Sliver implant binary listening to the implant's traffic can reliably recover the session key, resulting in full disclosure of all transmitted data. Furthermore, the MitM can fully compromise the connection to execute arbitrary commands supported by the corresponding implant on its installed devices.  
 
 ## Expected Behavior
-Based on the official documentation, a man in the middle (MitM) without access to the server's private key should not be able to decrypt the underlying data transmission; and any changes made to the data stream should be noticed.  
+Based on the official documentation, a man in the middle (MitM) without access to the server's private key should not be able to decrypt the transmitted data; and any changes made to the data stream should be noticed.  
 
 ## Actual Behavior
 A MitM with access only to an implant executable can fully compromise the corresponding implant's network traffic, including 1. decrypting and eavesdropping on the underlying data transmission, and 2. taking over the control of the implant to execute arbitrary tasks.
@@ -48,16 +52,16 @@ Also on the same Wikipedia page, it reads:
 
 Assuming that all public keys last eternally (as they can be captured by listening to the network traffic), recovery of **any** private key(s) used in the shared secret derivation **will** result in full disclosure of session keys. (And yes, this is how the "[harvest now, decrypt later](https://en.wikipedia.org/wiki/Harvest_now,_decrypt_later)" strategy would work!) As the documentation correctly identifies this as a limitation, we'd argue the recovery of server private keys is not an issue.  
 
-However, the server used the same, hard-coded key pairs from both the server and the implant to derive a shared secret. This is where problems arise.  
+The problem here arose from using the same, hard-coded key pairs in both the server and the implant binaries to derive a shared secret.  
 
 During the ECDH key exchange between the implant and the server, the same shared secret can be derived in the following operations:  
 
 > **Option A**: Use the private key from the server (`s`) and the public key from the implant (`C`) to calculate the shared secret `R`. (`R = C ** s`). This is what the server uses.  
 > **Option B**: Use the public key from the server (`S`) and the private key from the implant (`c`) to calculate the shared secret `R`. (`R = S ** c`). This is what the implant uses.  
 
-Since both `S` and `c` are statically embedded in the implant, one can recover the shared secret by simply reverse engineering the compiled implant executable. (Basically "replay" what the implant would do to compute the shared secret!)  
+Since both `S` and `c` are statically embedded in a vulnerable implant, one can recover the shared secret by simply reverse engineering the compiled implant executable. (Basically "replay" what the implant would do to compute the shared secret!)  
 
-Furthermore, as the implant does not validate the authenticity, a MitM who recovered the shared secret (hence granted access to the session key) can produce valid encrypted data streams to control the behavior of the corresponding implant's installations.
+Furthermore, as the vulnerable implant does not validate the authenticity, a MitM who recovered the shared secret (hence granted access to the session key) can produce valid encrypted data streams to control the behavior of the corresponding implant's installations.
 
 
 ## Detailed Walkthrough
@@ -84,4 +88,4 @@ The PoC is written in Node.js (`v12.22.12`+) and only works on HTTP(S) implants.
 
 By default, the PoC server prints all the received data on the console screen. You should see your designated payload popping up on the implanted device instantly right after the beacon starts.  
 
-Also, if you somehow cannot generate your own implant binary to test on, there's a sample (host: `hxxps://192.168.211[.]129:443`) under the `demo` folder. The default `conf.json` has the settings already filled in targeting this binary. The password is the standard one commonly used in malware analysis.  
+Also, if you somehow cannot generate your own vulnerable implant binary to test on, there's a sample (host: `hxxps://192.168.211[.]129:443`) under the `demo` folder. The default `conf.json` has the settings already filled in targeting this binary. The password is the standard one commonly used in malware analysis.  
